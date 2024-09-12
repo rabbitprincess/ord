@@ -120,22 +120,22 @@ struct Search {
 #[folder = "static"]
 struct StaticAssets;
 
-struct StaticHtml {
-  title: &'static str,
-  html: &'static str,
-}
-
-impl PageContent for StaticHtml {
-  fn title(&self) -> String {
-    self.title.into()
-  }
-}
-
-impl Display for StaticHtml {
-  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-    f.write_str(self.html)
-  }
-}
+// struct StaticHtml {
+//   title: &'static str,
+//   html: &'static str,
+// }
+//
+// impl PageContent for StaticHtml {
+//   fn title(&self) -> String {
+//     self.title.into()
+//   }
+// }
+//
+// impl Display for StaticHtml {
+//   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+//     f.write_str(self.html)
+//   }
+// }
 
 #[derive(Debug, Parser)]
 pub(crate) struct Server {
@@ -308,6 +308,10 @@ impl Server {
         .route(
           "/ord/debug/bitmap/district/:number",
           get(ord::ord_debug_bitmap_district),
+        )
+        .route(
+          "/ord/debug/btc/name/:btc_name",
+          get(ord::ord_debug_btc_name),
         )
         .route("/brc20/tick/:tick", get(brc20::brc20_tick_info))
         .route("/brc20/tick", get(brc20::brc20_all_tick_info))
@@ -2232,7 +2236,7 @@ mod tests {
         Runestone {
           edicts: vec![Edict {
             id: 0,
-            amount: u128::max_value(),
+            amount: u128::MAX,
             output: 0,
           }],
           etching: Some(Etching {
@@ -2278,7 +2282,7 @@ mod tests {
         Runestone {
           edicts: vec![Edict {
             id: 0,
-            amount: u128::max_value(),
+            amount: u128::MAX,
             output: 0,
           }],
           etching: Some(Etching {
@@ -2306,7 +2310,7 @@ mod tests {
         RuneEntry {
           etching: txid,
           rune: Rune(RUNE),
-          supply: u128::max_value(),
+          supply: u128::MAX,
           timestamp: 2,
           ..Default::default()
         }
@@ -2315,7 +2319,7 @@ mod tests {
 
     assert_eq!(
       server.index.get_rune_balances().unwrap(),
-      [(OutPoint { txid, vout: 0 }, vec![(id, u128::max_value())])]
+      [(OutPoint { txid, vout: 0 }, vec![(id, u128::MAX)])]
     );
 
     server.assert_response_regex(
@@ -2345,7 +2349,7 @@ mod tests {
         Runestone {
           edicts: vec![Edict {
             id: 0,
-            amount: u128::max_value(),
+            amount: u128::MAX,
             output: 0,
           }],
           etching: Some(Etching {
@@ -2374,7 +2378,7 @@ mod tests {
         RuneEntry {
           etching: txid,
           rune,
-          supply: u128::max_value(),
+          supply: u128::MAX,
           symbol: Some('%'),
           timestamp: 2,
           ..Default::default()
@@ -2384,7 +2388,7 @@ mod tests {
 
     assert_eq!(
       server.index.get_rune_balances().unwrap(),
-      [(OutPoint { txid, vout: 0 }, vec![(id, u128::max_value())])]
+      [(OutPoint { txid, vout: 0 }, vec![(id, u128::MAX)])]
     );
 
     server.assert_response_regex(
@@ -2453,7 +2457,7 @@ mod tests {
         Runestone {
           edicts: vec![Edict {
             id: 0,
-            amount: u128::max_value(),
+            amount: u128::MAX,
             output: 0,
           }],
           etching: Some(Etching {
@@ -2483,7 +2487,7 @@ mod tests {
         RuneEntry {
           etching: txid,
           rune,
-          supply: u128::max_value(),
+          supply: u128::MAX,
           symbol: Some('%'),
           timestamp: 2,
           spacers: 1,
@@ -2494,7 +2498,7 @@ mod tests {
 
     assert_eq!(
       server.index.get_rune_balances().unwrap(),
-      [(OutPoint { txid, vout: 0 }, vec![(id, u128::max_value())])]
+      [(OutPoint { txid, vout: 0 }, vec![(id, u128::MAX)])]
     );
 
     server.assert_response_regex(
@@ -2552,7 +2556,7 @@ mod tests {
         Runestone {
           edicts: vec![Edict {
             id: 0,
-            amount: u128::max_value(),
+            amount: u128::MAX,
             output: 0,
           }],
           etching: Some(Etching {
@@ -2580,7 +2584,7 @@ mod tests {
         RuneEntry {
           etching: txid,
           rune: Rune(RUNE),
-          supply: u128::max_value(),
+          supply: u128::MAX,
           timestamp: 2,
           ..Default::default()
         }
@@ -2589,7 +2593,7 @@ mod tests {
 
     assert_eq!(
       server.index.get_rune_balances().unwrap(),
-      [(OutPoint { txid, vout: 0 }, vec![(id, u128::max_value())])]
+      [(OutPoint { txid, vout: 0 }, vec![(id, u128::MAX)])]
     );
 
     server.assert_response_regex(
@@ -2618,7 +2622,7 @@ mod tests {
         Runestone {
           edicts: vec![Edict {
             id: 0,
-            amount: u128::max_value(),
+            amount: u128::MAX,
             output: 0,
           }],
           etching: Some(Etching {
@@ -2648,7 +2652,7 @@ mod tests {
           divisibility: 1,
           etching: txid,
           rune,
-          supply: u128::max_value(),
+          supply: u128::MAX,
           timestamp: 2,
           ..Default::default()
         }
@@ -2659,7 +2663,7 @@ mod tests {
 
     assert_eq!(
       server.index.get_rune_balances().unwrap(),
-      [(output, vec![(id, u128::max_value())])]
+      [(output, vec![(id, u128::MAX)])]
     );
 
     server.assert_response_regex(

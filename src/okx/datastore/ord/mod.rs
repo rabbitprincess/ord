@@ -8,6 +8,7 @@ use {
 };
 
 pub mod bitmap;
+pub mod btc_name;
 pub mod collections;
 pub mod operation;
 pub mod redb;
@@ -25,15 +26,15 @@ pub trait OrdReader {
     chain: Chain,
   ) -> Result<ScriptKey, Self::Error>;
 
-  fn get_transaction_operations(
-    &self,
-    txid: &Txid,
-  ) -> Result<Option<Vec<InscriptionOp>>, Self::Error>;
+  // fn get_transaction_operations(
+  //   &self,
+  //   txid: &Txid,
+  // ) -> Result<Option<Vec<InscriptionOp>>, Self::Error>;
 
-  fn get_collections_of_inscription(
-    &self,
-    inscription_id: &InscriptionId,
-  ) -> Result<Option<Vec<CollectionKind>>, Self::Error>;
+  // fn get_collections_of_inscription(
+  //   &self,
+  //   inscription_id: &InscriptionId,
+  // ) -> Result<Option<Vec<CollectionKind>>, Self::Error>;
 
   fn get_collection_inscription_id(
     &self,
