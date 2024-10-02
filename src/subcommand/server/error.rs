@@ -1,4 +1,4 @@
-use {super::*, std::fmt::Write};
+use {super::*, std::fmt::Write, serde_json::Error as SerdeError};
 
 #[derive(Debug)]
 pub(super) enum ServerError {
@@ -70,5 +70,29 @@ impl<T> OptionExt<T> for Option<T> {
 impl From<Error> for ServerError {
   fn from(error: Error) -> Self {
     Self::Internal(error)
+  }
+}
+
+impl From<bitcoincore_rpc::Error> for ServerError {
+  fn from(error: bitcoincore_rpc::Error) -> Self {
+      Self::Internal(Error::new(error))
+  }
+}
+
+impl From<bitcoin::address::Error> for ServerError {
+  fn from(error: bitcoin::address::Error) -> Self {
+      Self::Internal(Error::new(error))
+  }
+}
+
+impl From<bitcoin::psbt::Error> for ServerError {
+  fn from(error: bitcoin::psbt::Error) -> Self {
+      Self::Internal(Error::new(error))
+  }
+}
+
+impl From<SerdeError> for ServerError {
+  fn from(error: SerdeError) -> Self {
+    Self::Internal(Error::new(error))
   }
 }
