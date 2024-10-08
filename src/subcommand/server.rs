@@ -12,6 +12,8 @@ use {
     PreviewMarkdownHtml, PreviewModelHtml, PreviewPdfHtml, PreviewTextHtml, PreviewUnknownHtml,
     PreviewVideoHtml, RareTxt, RuneHtml, RunesHtml, SatHtml, TransactionHtml,
   },
+  crate::wallet::{batch, wallet_constructor::WalletConstructor, ListDescriptorsResult, Wallet},
+  shared_args::SharedArgs,
   axum::{
     body,
     extract::{DefaultBodyLimit, Extension, Json, Path, Query},
@@ -31,6 +33,7 @@ use {
   },
   std::{str, sync::Arc},
   tokio_stream::StreamExt,
+  tokio::sync::Mutex,
   tower_http::{
     compression::CompressionLayer,
     cors::{Any, CorsLayer},
@@ -46,6 +49,27 @@ mod accept_json;
 mod error;
 pub mod query;
 mod server_config;
+
+pub mod balance;
+mod batch_command;
+pub mod cardinals;
+pub mod create;
+pub mod dump;
+pub mod inscribe;
+pub mod inscriptions;
+mod label;
+pub mod mint;
+pub mod outputs;
+pub mod pending;
+pub mod receive;
+pub mod restore;
+pub mod resume;
+pub mod runics;
+pub mod sats;
+pub mod send;
+mod shared_args;
+pub mod transactions;
+pub mod init_wallet;
 
 enum SpawnConfig {
   Https(AxumAcceptor),
@@ -120,6 +144,8 @@ pub struct Server {
     help = "Poll Bitcoin Core every <POLLING_INTERVAL>."
   )]
   pub(crate) polling_interval: humantime::Duration,
+  #[arg(long, default_value = "ord", help = "Use wallet named <WALLET>.")]
+  pub(crate) wallet_name: String,
 }
 
 impl Server {
@@ -160,6 +186,22 @@ impl Server {
         json_api_enabled: !self.disable_json_api,
         proxy: self.proxy.clone(),
       });
+
+      // router for wallet
+      let wallet: Arc<Mutex<Option<Arc<Wallet>>>> = Arc::new(Mutex::new(None));
+      let wallet_router = Router::new()
+        .route("/balance", get(balance::run))
+        .route("/cardinals", get(cardinals::run))
+        .route("/dump", get(dump::run))
+        .route("/outputs", get(outputs::run))
+        .route("/pending", get(pending::run))
+        .route("/receive", get(receive::run_one))
+        .route("/receive/:number", get(receive::run))
+        .route("/runics", get(runics::run))
+        .route("/send", post(send::run))
+        .route("/transactions", get(transactions::run_nolimit))
+        .route("/transactions/:limit", get(transactions::run))
+        .layer(Extension(wallet.clone()));
 
       let router = Router::new()
         .route("/", get(Self::home))
@@ -265,6 +307,7 @@ impl Server {
         .route("/tx/:txid", get(Self::transaction))
         .route("/decode/:txid", get(Self::decode))
         .route("/update", get(Self::update))
+        .nest("/wallet", wallet_router)
         .fallback(Self::fallback)
         .layer(Extension(index))
         .layer(Extension(server_config.clone()))
@@ -296,7 +339,7 @@ impl Server {
       } else {
         router
       };
-
+      println!("Server Initializing...");
       match (self.http_port(), self.https_port()) {
         (Some(http_port), None) => {
           self
@@ -348,6 +391,8 @@ impl Server {
 
       Ok(None)
     })
+
+
   }
 
   fn spawn(
@@ -383,6 +428,7 @@ impl Server {
         }
       );
     }
+    println!("Server Initialized!");
 
     Ok(tokio::spawn(async move {
       match config {
